@@ -16,6 +16,23 @@ fn zone_from_env<F: FnMut(&str) -> bool>(mut is_valid: F) -> Option<String> {
     }
 }
 
+#[cfg(not(target_os = "macos"))]
+fn get_local_zone_unix<F>(mut validate: F) -> Option<String>
+where
+    F: (FnMut(&str) -> bool),
+{
+    for path in &["/etc/timezone", "/var/db/zoneinfo"] {
+        if let Ok(tz) = fs::read_to_string(path) {
+            let tz = tz.trim();
+            if validate(tz) {
+                return Some(tz.into());
+            }
+        }
+    }
+
+    None
+}
+
 pub fn get_local_zone<F: FnMut(&str) -> bool>(mut is_valid: F) -> Option<String> {
     let mut validate = move |name: &str| might_be_unix_tz(name) && is_valid(name);
 
@@ -23,12 +40,10 @@ pub fn get_local_zone<F: FnMut(&str) -> bool>(mut is_valid: F) -> Option<String>
         return Some(tz);
     }
 
-    for path in &["/etc/timezone", "/var/db/zoneinfo"] {
-        if let Ok(tz) = fs::read_to_string(path) {
-            let tz = tz.trim();
-            if validate(tz) {
-                return Some(tz.into());
-            }
+    #[cfg(not(target_os = "macos"))]
+    {
+        if let Some(tz) = get_local_zone_unix(&mut validate) {
+            return Some(tz);
         }
     }
 
