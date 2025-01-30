@@ -1,4 +1,0 @@
-{
-    "python.formatting.provider": "black",
-    "rust-analyzer.cargo.allFeatures": true
-}
