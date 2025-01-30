@@ -56,6 +56,15 @@ pub fn get_local_zone<F: FnMut(&str) -> bool>(mut is_valid: F) -> Option<String>
                 return Some(tz.into());
             }
         }
+
+        #[cfg(target_os = "macos")]
+        {
+            if let Some((_, tz)) = link.split_once("/zoneinfo.default/") {
+                if validate(tz) {
+                    return Some(tz.into());
+                }
+            }
+        }
     }
 
     // Running $data "+%Z" returns the timezone not the exact local

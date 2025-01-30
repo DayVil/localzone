@@ -1,5 +1,8 @@
 all: test format-check lint
 
+demo:
+	cargo run --example demo --features chrono-tz
+
 test:
 	@cargo test
 	@cargo test --all-features
@@ -16,4 +19,4 @@ lint:
 	@rustup component add clippy 2> /dev/null
 	@cargo clippy
 
-.PHONY: all test format format-check lint
+.PHONY: all test format format-check lint demo
