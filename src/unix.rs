@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::{env, fs, process::Command};
 
 fn might_be_unix_tz(name: &str) -> bool {
     !name.is_empty()
@@ -55,6 +55,15 @@ pub fn get_local_zone<F: FnMut(&str) -> bool>(mut is_valid: F) -> Option<String>
             if validate(tz) {
                 return Some(tz.into());
             }
+        }
+    }
+
+    // Running $data "+%Z" returns the timezone not the exact local
+    if let Ok(output) = Command::new("sh").arg("-c").arg("date \"+%Z\"").output() {
+        let tz = String::from_utf8(output.stdout).unwrap_or("".to_string());
+        let tz = tz.trim();
+        if !tz.is_empty() && validate(tz) {
+            return Some(tz.to_string());
         }
     }
 
